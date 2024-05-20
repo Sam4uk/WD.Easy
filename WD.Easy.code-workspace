@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.autoSave": "onFocusChange",
+		"editor.rulers": [
+			80,
+			72
+		],
+		"C_Cpp.default.defines": [],
+		"editor.formatOnPaste": true,
+		"editor.formatOnSave": true,
+		"editor.formatOnType": true,
+		"workbench.colorTheme": "Elegant Red"
+	}
+}

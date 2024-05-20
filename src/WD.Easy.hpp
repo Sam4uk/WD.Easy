@@ -1,3 +1,5 @@
+#if !defined(_WD_EASY_HPP_)
+#define _WD_EASY_HPP_
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 
@@ -5,9 +7,9 @@
 
 using void_func_void = void (*)(void);
 
-void_func_void EasyWatchDogTask = nullptr;
+void_func_void WatchDogEasyTask = nullptr;
 
-struct EasyWatchDog {
+struct WatchDogEasy {
   /**
    * @brief WD delay
    */
@@ -32,7 +34,7 @@ struct EasyWatchDog {
    * @param mode
    * @param task
    */
-  EasyWatchDog(uint8_t time, uint8_t mode, void_func_void task) {
+  WatchDogEasy(uint8_t time, uint8_t mode, void_func_void task) {
     reset();
     setTimeOut(time);
     setMode(mode);
@@ -52,7 +54,7 @@ struct EasyWatchDog {
    * @brief Construct a new Easy Watch Dog object
    *
    */
-  EasyWatchDog() { reset(); };
+  WatchDogEasy() { reset(); };
   /**
    * @brief Get the Time Out
    *
@@ -81,11 +83,11 @@ struct EasyWatchDog {
 #if defined(WDP3)
     wbi(set, WDP3, rbi(time, 03));
 #endif
-    cli();
+    __asm__ __volatile__("cli" ::: "memory");
     reset();
     _WD_CONTROL_REG |= (_bv(_WD_CHANGE_BIT) | _bv(WDE));
     _WD_CONTROL_REG = set;
-    sei();
+    __asm__ __volatile__("sei" ::: "memory");
     return;
   };
   /**
@@ -109,11 +111,11 @@ struct EasyWatchDog {
     uint8_t set{_WD_CONTROL_REG | _bv(_WD_CHANGE_BIT)};
     wbi(set, WDIE, rbi(mode, 00));
     wbi(set, WDE, rbi(mode, 01));
-    cli();
+    __asm__ __volatile__("cli" ::: "memory");
     reset();
     _WD_CONTROL_REG |= (_bv(_WD_CHANGE_BIT));
     _WD_CONTROL_REG = set;
-    sei();
+    __asm__ __volatile__("sei" ::: "memory");
     return;
   };
   /**
@@ -132,7 +134,7 @@ struct EasyWatchDog {
    *
    */
   inline void reset() {
-    wdt_reset();
+    __asm__ __volatile__("wdr");
     return;
   }
   /**
@@ -142,11 +144,13 @@ struct EasyWatchDog {
    */
   void setTask(void_func_void task) {
     reset();
-    EasyWatchDogTask = task;
+    WatchDogEasyTask = task;
   }
 };
 
 ISR(WDT_vect) {
-  if (nullptr != EasyWatchDogTask)
-    EasyWatchDogTask();
+  if (nullptr != WatchDogEasyTask)
+    WatchDogEasyTask();
 }
+
+#endif // _WD_EASY_HPP_
