@@ -45,10 +45,10 @@ struct WatchDogEasy {
    *
    */
   enum {
-    wdDISABLED,        ///<
-    wdINTERRUPT,       ///<
-    wdSYSTEMRESET,     ///<
-    wdINTERUPTANDRESET ///<
+    DISABLED,        ///<
+    INTERRUPT,       ///<
+    SYSTEMRESET,     ///<
+    INTERUPTANDRESET ///<
   };
   /**
    * @brief Construct a new Easy Watch Dog object
