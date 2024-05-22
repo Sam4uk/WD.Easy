@@ -1,3 +1,13 @@
+/**
+ * @file WD.Easy.hpp
+ * @author Sam4uk
+ * @brief
+ * @version 1.0
+ * @date 2024-05-22
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
 #if !defined(_WD_EASY_HPP_)
 #define _WD_EASY_HPP_
 #include <avr/interrupt.h>
