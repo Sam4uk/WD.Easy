@@ -1,21 +1,67 @@
+
 # WD.Easy
 
-Ця бібліотека призначена для керування режимами роботи сторожового таймера, поки тільки мікроконтролерів серії `AVR`.
+This library is intended to control watchdog modes of operation, so far only series microcontrollers `AVR`.
 
-## Особливості
+## Features
 
-Я не писав її в стилі класу синглтон (сторожовий таймер то один). Все рівно скільки об'єктів не було б створено всі вони
-працюватимуть з одним регістом.
+I did not write it in the style of a singleton class (the watchdog is one). No matter how many objects are created, they will all work with the same register. I set myself the task to make the library as easy as possible and can be used for any Arduino and not only.
 
-## Перед історія
+The main requirement is that the __TIMER SHOULD START COUNTING EVEN BEFORE THE FUNCTION `setup` STARTS__ , and even better before the start of `main`.
 
-Всі ті бібліотеки які я знаходив не відповідали моїй основній вимозі.
 
-__ТАЙМЕР МАЄ ПОЧАТИ ВІДЛІК ЩЕ ДО СТАРТУ ФУНКЦІЇ `setup`__
+## It seems to have worked
 
-# Приклади
+### Methods are available in the timer
 
-## Приклад перший
+| Method              | DESCRIPTION                        |result   |
+|---------------------|------------------------------------|---------|
+|||                                                                  |
+|`setTimeOut(uint8_t)`|Sets the timer trigger interval     |`void`   |
+|`setMode(uint8_t)`   |Sets the action when the timer is triggered|`void`   |
+|`setTask(ptr*)`      |Set the interrupt handler function  |`void`   |
+|||                                                                  |
+|`getTimeOut()`       |Get the frequency of activations    |`uint8_t`|
+|`getMode()`          |Get the timer mode                  |`uint8_t`|
+|`isEnable()`         |Is the timer active?                |`bool`   |
+|||                                                                  |
+|`reset()`            |Start a new countdown               |`void`   |
+
+#### Intervals
+
+The table shows the parameters accepted by the method `setTimeOut(uint8_t)` and returns `getTimeOut()`.
+
+|define  |time s| |
+|--------|:---:|-|
+|WD_15MS |0.015| |
+|WD_30MS |0.030| |
+|WD_60MS |0.060| |
+|WD_120MS|0.120| |
+|WD_250MS|0.250| |
+|WD_500MS|0.500| |
+|WD_1S   |1    | |
+|WD_2S   |2    | |
+|WD_4S   |4    | |
+|WD_8S   |8    | |
+
+_Note_ The time is approximate and not suitable for measuring exact intervals, since the watchdog timer is clocked by an internal low-latency oscillator that "floats" when the supply voltage and temperature change
+
+#### Actions
+
+|define          |DESCRIPTION|
+|----------------|-|
+|DISABLED        |The timer is stopped|
+|INTERRUPT       |When triggered, the interrupt handler will be called|
+|SYSTEMRESET     |When triggered, the microcontroller will be rebooted|
+|INTERUPTANDRESET|When triggered, the interrupt handler will be called </br> after the same intervals, the controller will be rebooted|
+
+#### Обробник переривань
+
+By default, no interrupt handler is specified (`nullptr`).
+
+## Examples
+
+### Example one
 ```cpp
 void WD_tick() {
 Serial.print("WD_tick()");
@@ -27,13 +73,11 @@ WatchDogEasy WD(WatchDogEasy::WD_1S, WatchDogEasy::INTERRUPT, WD_tick);
 void setup() { Serial.begin(115200); }
 void loop() {}
 ```
-Тут ми ініціюємо таймер на спрацьовування кожну секунду, при спрацьовуванні генеруватиметься переривання, яке буде
-оброблятися функцією `WD_tick()`.
+Here we trigger the timer to fire every second, when it fires, an interrupt will be generated, which will be handled by the `WD_tick()` function.
 
-В цьому прикладі таймер починає відлік ще до початку роботи функції `setup()`. Це зручно якщо при ініціації контролеру є
-ризик завичнути
+In this example, the timer starts counting even before the `setup()` function starts. This is convenient if there is a risk of the controller freezing during initiation.
 
-## Приклад другий
+### Example two
 
 ```cpp
 void WD_tick() {
@@ -52,71 +96,41 @@ WD.setTask(WD_tick);
 void loop() {}
 ```
 
-Тут все те саме, але таймер починає відлік після останнього сеттера.
+Everything is the same here, but the timer starts counting after the last setter.
 
-Всі сетери скидають таймер на новий відлік.
-Геттери цього не роблять (Будьте уважні). Під час виконання геттеру може збігти час і виконатися дія запрограмованна у
-таймері.
+All setters reset the timer to a new count. Getters do not (Be careful). During the execution of the getter, the time may coincide and the action programmed in the timer may be executed.
 
-# Керування таймером
+### Example three
 
-## Методи
-<table>
-    <thead>
-        <tr>
-            <td>Метод</td>
-            <td>ОПИС</td>
-            <td>результат</td>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>setTimeOut(uint8_t)</td>
-            <td>Задає інтервал спрацьовувань таймеру</td>
-            <td>void</td>
-        </tr>
-    </tbody>
-</table>
-<!-- | Метод | ОПИС |результат|
-|---------------------|------------------------------------|---------|
-||Задає інтервал спрацьовувань таймеру|`void` |
-|`setMode(uint8_t)` |Задає дію при спрацьовуванні таймеру|`void` |
-|`setTask(ptr*)` |Задати функцію обробник переривання |`void` |
-||| |
-|`getTimeOut()` |Отримати періодичність спрацьовуань |`uint8_t`|
-|`getMode()` |Отримати режим роботи таймеру |`uint8_t`|
-|`isEnable()` |Чи активний таймер |`bool` |
-||| |
-|`reset()` |Почати новий відлік || -->
+```cpp
+WatchDogEasy WD(WatchDogEasy::WD_1S, WatchDogEasy::SYSTEMRESET, nullptr);
+
+int main(){
+for(;;){
+
+}
+}
+``` 
+
+Here, the timer is initialized before entering `main()`. In my opinion, it's super convenient
+
+## "System Requirements"
+
+The timer will work on any Arduino and AVR series microcontrollers
+
+An additional 2 bytes in the RAM will take up space in the flash 198 bytes
 
 
+## The most important thing
 
-## Інтервали
-|define | час| |
-|--------|:---:|-|
-|WD_15MS |0.015| |
-|WD_30MS |0.030| |
-|WD_60MS |0.060| |
-|WD_120MS|0.120| |
-|WD_250MS|0.250| |
-|WD_500MS|0.500| |
-|WD_1S |1 | |
-|WD_2S |2 | |
-|WD_4S |2 | |
-|WD_8S |4 | |
+### Installation
 
-_Примітка_ Час приблизний і не підходить для вимірювання точних інтервалів, оскільки сторожевий таймер тактується від
-внутрішнього низькочатоного генератора, який "пливе" при зміні напруги живлення та температури
+1. You can download a zip archive [WD.Easy v1.0](https://github.com/Sam4uk/WD.Easy/archive/refs/tags/v1.0.zip) And extract the contents to the desired directory
+2. The library is available for installation through the Arduino IDE library manager.
+3. You can download a zip archive [WD.Easy prerelise](https://github.com/Sam4uk/WD.Easy/archive/refs/heads/main.zip). This is a test branch with the most recent code, not debugged. It is set as the first item of this list
 
-## Дії
-|define|Означення|
-|-|-|
-|DISABLED|Таймер зупинено|
-|INTERRUPT|При спрацьовуванні буде викликано обробник переривання|
-|SYSTEMRESET|При спрацьовуванні буде виконано перезавантаження мікроконтроллера|
-|INTERUPTANDRESET|При спрацьовуванні буде викликано обробник переривання</br> І через такий же інтервали виконається
-перезавантаження контролеру|
-
-## Обробник переривань
-
-За замовчуванням обробникпереривань не вказаний (`nullptr`).
+Need to connect 
+```cpp
+ #include <WD.Easy.hpp>
+```
+and do not forget to set the timer so that it does not reset the program
