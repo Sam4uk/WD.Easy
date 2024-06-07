@@ -2,7 +2,7 @@
  * @file WD.Easy.hpp
  * @author Sam4uk
  * @brief
- * @version 1.0
+ * @version 1.0.2
  * @date 2024-05-22
  *
  * @copyright Copyright (c) 2024
@@ -79,6 +79,10 @@ struct WatchDogEasy {
     wbi(res, 03, rbi(_WD_CONTROL_REG, WDP3));
 #endif
     return res;
+  }
+  inline unsigned long getMillis() {
+    constexpr unsigned long _interval_{(2048 / 128) + 1};
+    return (_interval_ << getTimeOut());
   }
   /**
    * @brief Set the Time Out
