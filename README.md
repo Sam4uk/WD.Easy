@@ -1,3 +1,4 @@
+![](https://badges.registry.platformio.org/packages/sam4uk/library/WD%20Easy.svg)
 
 # WD.Easy
 
